@@ -2,91 +2,92 @@ name: Build Windows Executable
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
   release:
     types: [created]
 
-jobs: 
+jobs:
   build-windows:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-        
-    - name: Install Wine and Xvfb
-      run: |
-        sudo apt update
-        sudo apt install -y wine64 xvfb
-        
-    - name: Start Xvfb
-      run: |
-        Xvfb :99 -screen 0 1024x768x16 &
-        sleep 2
-        
-    - name: Install Python dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pyinstaller
-        pip install -r requirements.txt
-        
-    - name: Download and install Windows Python via Wine
-      env:
-        DISPLAY: :99
-      run: |
-        # Download Python for Windows
-        wget https://www.python.org/ftp/python/3.11.8/python-3.11.8-amd64.exe -O python-installer.exe
-        
-        # Install Python for Windows using Wine
-        wine python-installer. exe /quiet InstallAllUsers=1 PrependPath=1
-        
-        # Wait for installation to complete
-        sleep 30
-        
-    - name: Install Windows Python dependencies
-      env:
-        DISPLAY: :99
-      run: |
-        # Install pip packages for Windows Python
-        wine ~/.wine/drive_c/Program\ Files/Python311/python.exe -m pip install --upgrade pip
-        wine ~/.wine/drive_c/Program\ Files/Python311/python.exe -m pip install pyinstaller
-        wine ~/. wine/drive_c/Program\ Files/Python311/python.exe -m pip install -r requirements. txt
-        
-    - name:  Build executable with PyInstaller
-      env:
-        DISPLAY: :99
-      run: |
-        # Use Wine to run Windows Python and PyInstaller
-        wine ~/.wine/drive_c/Program\ Files/Python311/python.exe -m PyInstaller \
-          --onefile \
-          --console \
-          --name FNGGLocker \
-          main.py
-          
-    - name: Prepare artifacts
-      run: |
-        # Copy the built executable to a more accessible location
-        mkdir -p artifacts
-        cp dist/FNGGLocker.exe artifacts/
-        
-    - name: Upload executable artifact
-      uses: actions/upload-artifact@v4
-      with: 
-        name: FNGGLocker-Windows
-        path:  artifacts/FNGGLocker.exe
-        
-    # Optional: Upload to release if this is a release event
-    - name: Upload to release
-      if: github. event_name == 'release'
-      uses: softprops/action-gh-release@v1
-      with:
-        files:  artifacts/FNGGLocker.exe
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install Wine and Xvfb
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt update
+          sudo apt install -y wine64 wine32 xvfb
+
+      - name: Start Xvfb
+        run: |
+          Xvfb :99 -screen 0 1024x768x16 &
+          sleep 2
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+          pip install -r requirements. txt
+
+      - name: Download and install Windows Python via Wine
+        env:
+          DISPLAY: :99
+        run: |
+          # Download Python for Windows
+          wget https://www.python.org/ftp/python/3.11.8/python-3.11.8-amd64.exe -O python-installer.exe
+
+          # Install Python for Windows using Wine
+          wine python-installer.exe /quiet InstallAllUsers=1 PrependPath=1
+
+          # Wait for installation to complete
+          sleep 30
+
+      - name: Install Windows Python dependencies
+        env:
+          DISPLAY: :99
+        run: |
+          # Install pip packages for Windows Python
+          wine ~/.wine/drive_c/Program\ Files/Python311/python.exe -m pip install --upgrade pip
+          wine ~/.wine/drive_c/Program\ Files/Python311/python.exe -m pip install pyinstaller
+          wine ~/.wine/drive_c/Program\ Files/Python311/python.exe -m pip install -r requirements.txt
+
+      - name: Build executable with PyInstaller
+        env:
+          DISPLAY: :99
+        run: |
+          # Use Wine to run Windows Python and PyInstaller
+          wine ~/.wine/drive_c/Program\ Files/Python311/python.exe -m PyInstaller \
+            --onefile \
+            --console \
+            --name FNGGLocker \
+            main.py
+
+      - name: Prepare artifacts
+        run: |
+          # Copy the built executable to a more accessible location
+          mkdir -p artifacts
+          cp dist/FNGGLocker.exe artifacts/
+
+      - name: Upload executable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FNGGLocker-Windows
+          path: artifacts/FNGGLocker.exe
+
+      # Optional: Upload to release if this is a release event
+      - name: Upload to release
+        if: github. event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/FNGGLocker.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
