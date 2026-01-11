@@ -8,7 +8,7 @@ on:
   release:
     types: [created]
 
-jobs:
+jobs: 
   build-windows:
     runs-on: ubuntu-latest
     
@@ -21,10 +21,15 @@ jobs:
       with:
         python-version: '3.11'
         
-    - name: Install Wine
+    - name: Install Wine and Xvfb
       run: |
         sudo apt update
-        sudo apt install -y wine64
+        sudo apt install -y wine64 xvfb
+        
+    - name: Start Xvfb
+      run: |
+        Xvfb :99 -screen 0 1024x768x16 &
+        sleep 2
         
     - name: Install Python dependencies
       run: |
@@ -33,24 +38,30 @@ jobs:
         pip install -r requirements.txt
         
     - name: Download and install Windows Python via Wine
+      env:
+        DISPLAY: :99
       run: |
         # Download Python for Windows
         wget https://www.python.org/ftp/python/3.11.8/python-3.11.8-amd64.exe -O python-installer.exe
         
         # Install Python for Windows using Wine
-        wine python-installer.exe /quiet InstallAllUsers=1 PrependPath=1
+        wine python-installer. exe /quiet InstallAllUsers=1 PrependPath=1
         
         # Wait for installation to complete
         sleep 30
         
     - name: Install Windows Python dependencies
+      env:
+        DISPLAY: :99
       run: |
         # Install pip packages for Windows Python
         wine ~/.wine/drive_c/Program\ Files/Python311/python.exe -m pip install --upgrade pip
         wine ~/.wine/drive_c/Program\ Files/Python311/python.exe -m pip install pyinstaller
-        wine ~/.wine/drive_c/Program\ Files/Python311/python.exe -m pip install -r requirements.txt
+        wine ~/. wine/drive_c/Program\ Files/Python311/python.exe -m pip install -r requirements. txt
         
-    - name: Build executable with PyInstaller
+    - name:  Build executable with PyInstaller
+      env:
+        DISPLAY: :99
       run: |
         # Use Wine to run Windows Python and PyInstaller
         wine ~/.wine/drive_c/Program\ Files/Python311/python.exe -m PyInstaller \
@@ -67,15 +78,15 @@ jobs:
         
     - name: Upload executable artifact
       uses: actions/upload-artifact@v4
-      with:
+      with: 
         name: FNGGLocker-Windows
-        path: artifacts/FNGGLocker.exe
+        path:  artifacts/FNGGLocker.exe
         
     # Optional: Upload to release if this is a release event
     - name: Upload to release
-      if: github.event_name == 'release'
+      if: github. event_name == 'release'
       uses: softprops/action-gh-release@v1
       with:
-        files: artifacts/FNGGLocker.exe
+        files:  artifacts/FNGGLocker.exe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
